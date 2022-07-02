@@ -27,3 +27,5 @@
 *.swagger.json
 *.swp
 .deploy.yaml
+k8res
+*.curr.*

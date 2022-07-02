@@ -1,0 +1,15 @@
+app:
+  namespaces:
+    - all
+log:
+  compress: false
+  consolestdout: true
+  filestdout: true
+  level: debug
+  localtime: true
+  maxage: 30
+  maxbackups: 300
+  maxsize: 10240
+  path: ./logs/k8res.log
+  jsonformat: false
+

@@ -1,30 +1,31 @@
-/*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
-*/
+// Package cmd
+// Copyright © 2022 Zeng Ganghui <zengganghui@gmail.com>
 package cmd
 
 import (
+	"fmt"
+	"github.com/spf13/viper"
+	"k8res/pkg/config"
+	log "k8res/pkg/logger"
+	"k8res/pkg/utils"
 	"os"
 
 	"github.com/spf13/cobra"
 )
 
-
+var (
+	runMode    string
+	logLevel   string
+	namespaces []string
+)
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "k8res",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
+	Short: "Get k8s pods cpu and mem resource usage",
+	Long:  `Get all k8s pods cpu and mem request, limit and current usage with a special namespace.`,
+	Args:  cobra.MinimumNArgs(1),
+	//Run: func(cmd *cobra.Command, args []string) { },
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
@@ -37,15 +38,30 @@ func Execute() {
 }
 
 func init() {
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
+	utils.PrintFullVersion()
+	cobra.OnInitialize(initConfig)
 
-	// rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.k8res.yaml)")
+	rootCmd.PersistentFlags().StringVarP(&runMode, "mode", "m", "prod", "run mode with: prod, dev, test")
+	rootCmd.PersistentFlags().StringVar(&logLevel, "log", "info", "logger lever: debug, info, warn, error ")
+	if err := viper.BindPFlag("log.level", rootCmd.PersistentFlags().Lookup("log")); err != nil {
+		fmt.Printf("FATAIL: %s", err)
+		os.Exit(1)
+	}
 
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.PersistentFlags().StringArrayVarP(&namespaces, "namespaces", "n", []string{"all"}, "use special namespace list or all")
+	if err := viper.BindPFlag("app.namespaces", rootCmd.PersistentFlags().Lookup("namespaces")); err != nil {
+		fmt.Printf("FATAIL: %s", err)
+		os.Exit(1)
+	}
 }
 
-
+// initConfig reads in config file and ENV variables if set.
+func initConfig() {
+	if err := config.ViperInit(runMode, "k8res"); err != nil {
+		fmt.Printf("ERROR: init config failed, %v", err)
+	}
+	log.Initialize() // need following config init
+	if err := config.Save(); err != nil {
+		fmt.Printf("ERROR: save curr config failed, %v", err)
+	}
+}
