@@ -3,9 +3,11 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+	k8client "k8res/internal/k8s/client"
+	"k8res/internal/process"
+
+	//"k8res/internal/process"
 )
 
 // exportCmd represents the export command
@@ -13,9 +15,14 @@ var exportCmd = &cobra.Command{
 	Use:   "export",
 	Short: "export current pods resource",
 	//Long: ``
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("export called")
-	},
+	Run: exportStart,
+}
+
+func exportStart(cmd *cobra.Command, args []string) {
+	k8 := k8client.New("")
+	store := make(process.PodResStore)
+	process.GetPodRes(k8, store)
+	process.ExportPodRes(store)
 }
 
 func init() {
