@@ -13,6 +13,7 @@ import (
 
 //AllPodResStore ex: [ns][podName]
 type AllPodResStore map[string]map[string]PodResStore
+
 //PodResStore ex: [request/limit/usage][cpu/mem/disk][normal/min/mas] = int64
 type PodResStore map[string]map[string]map[string]int64
 
@@ -40,7 +41,7 @@ func GetPodRes(k8 *k8client.K8s, store AllPodResStore) error {
 
 		for _, pod := range pods.Items {
 			if pod.Status.Phase != "Running" {
-				logger.Infof("pod %s is not running", pod.Name)
+				logger.Debugf("pod %s is not running", pod.Name)
 				continue
 			}
 			if _, ok := store[pod.Namespace]; !ok {
@@ -52,6 +53,7 @@ func GetPodRes(k8 *k8client.K8s, store AllPodResStore) error {
 			podStore = store[pod.Namespace][pod.Name]
 
 			podStoreInit(podStore)
+			resetNormalCount(podStore)
 
 			// requests & limits
 			for _, container := range pod.Spec.Containers {
@@ -72,7 +74,7 @@ func GetPodRes(k8 *k8client.K8s, store AllPodResStore) error {
 			// disk
 			for _, volume := range pod.Spec.Volumes {
 				if volume.VolumeSource.PersistentVolumeClaim != nil {
-					pvc, err := pvcClient.Get(ctx, volume.VolumeSource.PersistentVolumeClaim.ClaimName, metav1.GetOptions{});
+					pvc, err := pvcClient.Get(ctx, volume.VolumeSource.PersistentVolumeClaim.ClaimName, metav1.GetOptions{})
 					if err != nil {
 						return err
 					}
@@ -106,6 +108,18 @@ func GetPodRes(k8 *k8client.K8s, store AllPodResStore) error {
 		}
 	}
 	return nil
+}
+
+func resetNormalCount(podStore PodResStore) {
+	podStore["request"]["cpu"]["normal"] = 0
+	podStore["request"]["mem"]["normal"] = 0
+	podStore["request"]["disk"]["normal"] = 0
+	podStore["limit"]["cpu"]["normal"] = 0
+	podStore["limit"]["mem"]["normal"] = 0
+	podStore["limit"]["disk"]["normal"] = 0
+	podStore["usage"]["cpu"]["normal"] = 0
+	podStore["usage"]["mem"]["normal"] = 0
+	podStore["usage"]["disk"]["normal"] = 0
 }
 
 func podStoreInit(podStore PodResStore) {
@@ -192,7 +206,7 @@ func updateMinMaxUsage(podStore PodResStore) {
 	}
 }
 
-func getNamespaces(allNamespaces []corev1.Namespace) []string{
+func getNamespaces(allNamespaces []corev1.Namespace) []string {
 	var usedNamespaceName []string
 	var allNamespacesName []string
 	usedNamespaceNamesSet := make(map[string]bool)
@@ -203,11 +217,11 @@ func getNamespaces(allNamespaces []corev1.Namespace) []string{
 	for _, namespace := range config.GetStringSlice("app.namespaces") {
 		usedNamespaceNamesSet[namespace] = true
 	}
-	if _, ok:=usedNamespaceNamesSet["all"]; ok {
+	if _, ok := usedNamespaceNamesSet["all"]; ok {
 		return allNamespacesName
 	}
-	for _, ns:= range allNamespacesName{
-		if _, ok:=usedNamespaceNamesSet[ns]; ok {
+	for _, ns := range allNamespacesName {
+		if _, ok := usedNamespaceNamesSet[ns]; ok {
 			usedNamespaceName = append(usedNamespaceName, ns)
 		}
 	}
@@ -227,8 +241,10 @@ func ExportPodRes(store AllPodResStore) {
 			fmt.Print(pod["limit"]["mem"]["normal"], ", ")
 			fmt.Print(pod["limit"]["disk"]["normal"], ", ")
 			fmt.Print(pod["usage"]["cpu"]["min"], ", ")
+			fmt.Print(pod["usage"]["cpu"]["normal"], ", ")
 			fmt.Print(pod["usage"]["cpu"]["max"], ", ")
 			fmt.Print(pod["usage"]["mem"]["min"], ", ")
+			fmt.Print(pod["usage"]["mem"]["normal"], ", ")
 			fmt.Print(pod["usage"]["mem"]["max"], ", ")
 			fmt.Print(pod["usage"]["disk"]["normal"], ", ")
 			fmt.Println()

@@ -1,6 +1,6 @@
 app:
   namespaces:
-    - all
+  - all
 log:
   compress: false
   consolestdout: true

@@ -1,3 +1,7 @@
 app:
   namespaces:
-    - infra
+  - infra
+log:
+  consolestdout: true
+  filestdout: false
+  level: info

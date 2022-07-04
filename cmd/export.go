@@ -6,7 +6,6 @@ import (
 	"github.com/spf13/cobra"
 	k8client "k8res/internal/k8s/client"
 	"k8res/internal/process"
-
 	//"k8res/internal/process"
 )
 
@@ -21,7 +20,9 @@ var exportCmd = &cobra.Command{
 func exportStart(cmd *cobra.Command, args []string) {
 	k8 := k8client.New("")
 	store := make(process.AllPodResStore)
-	process.GetPodRes(k8, store)
+	if err := process.GetPodRes(k8, store); err != nil {
+		panic(err)
+	}
 	process.ExportPodRes(store)
 }
 

@@ -1,3 +1,7 @@
 app:
   namespaces:
-    - default
+  - default
+log:
+  consolestdout: true
+  filestdout: true
+  level: info
