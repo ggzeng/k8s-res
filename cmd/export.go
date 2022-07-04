@@ -20,7 +20,7 @@ var exportCmd = &cobra.Command{
 
 func exportStart(cmd *cobra.Command, args []string) {
 	k8 := k8client.New("")
-	store := make(process.PodResStore)
+	store := make(process.AllPodResStore)
 	process.GetPodRes(k8, store)
 	process.ExportPodRes(store)
 }
