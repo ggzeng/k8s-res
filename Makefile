@@ -1,3 +1,4 @@
+# created at 2022-7-5 by Zeng Ganghui
 
 VERSION := 0.1.0
 BUILD := $(shell git rev-parse --short HEAD)
@@ -14,7 +15,7 @@ REGISTRY_ADDRESS ?= registry-hz.rubikstack.com
 IMAGE_VERSION ?= $(IMAGE_NAME):$(BRANCH)-$(BUILD)-$(DATE)
 IMAGE_FULLNAME ?= $(REGISTRY_ADDRESS)/$(GROUP)/$(IMAGE_VERSION)
 
-VER_PKG = $(PROJECT)/cmd
+VER_PKG = $(PROJECT)/pkg/utils
 LDFLAGS += -X "$(VER_PKG).Version=$(VERSION)"
 LDFLAGS += -X "$(VER_PKG).BuildTS=$(shell date -u '+%Y-%m-%d %I:%M:%S')"
 LDFLAGS += -X "$(VER_PKG).GitHash=$(shell git rev-parse HEAD)"
@@ -25,7 +26,7 @@ all: go-lint build
 
 build: $(TARGETS)
 
-$(TARGETS): $(GO_SRC) $(PROTO_SRC)
+$(TARGETS): $(GO_SRC) $(PROTO_SRC) Makefile
 	$(GO) build -o $@ -ldflags '$(LDFLAGS)' $(PROJECT)
 
 gen:
