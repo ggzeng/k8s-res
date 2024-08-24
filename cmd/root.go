@@ -4,13 +4,14 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
-	"k8res/pkg/config"
-	log "k8res/pkg/logger"
-	"k8res/pkg/utils"
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+
+	"k8res/pkg/config"
+	log "k8res/pkg/logger"
+	"k8res/pkg/utils"
 )
 
 var (
@@ -47,7 +48,6 @@ func init() {
 		fmt.Printf("FATAIL: %s", err)
 		os.Exit(1)
 	}
-
 	rootCmd.PersistentFlags().StringArrayVarP(&namespaces, "namespaces", "n", []string{"all"}, "use special namespace list or all")
 	if err := viper.BindPFlag("app.namespaces", rootCmd.PersistentFlags().Lookup("namespaces")); err != nil {
 		fmt.Printf("FATAIL: %s", err)

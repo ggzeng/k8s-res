@@ -2,7 +2,6 @@ package client
 
 import (
 	"github.com/spf13/viper"
-	"io/ioutil"
 	"k8res/pkg/logger"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
@@ -17,7 +16,7 @@ type K8s struct {
 	ClientSet     clientSet.Interface
 	MetricsClient *metrics.Clientset
 	RestConfig    *clientReset.Config
-	namesapce     string // current namespace
+	namespace     string // current namespace
 	outOfCluster  bool   // out of cluster config
 }
 
@@ -55,16 +54,16 @@ func (k *K8s) GetVersion() (string, error) {
 	return version.String(), nil
 }
 
-func (k *K8s) SetNamespace(namesapce string) {
-	k.namesapce = namesapce
+func (k *K8s) SetNamespace(namespace string) {
+	k.namespace = namespace
 }
 
 func (k *K8s) GetNamespace() string {
-	if k.namesapce == "" {
+	if k.namespace == "" {
 		logger.Warn("can not get current namespace, use 'default'")
-		k.namesapce = "default"
+		k.namespace = "default"
 	}
-	return k.namesapce
+	return k.namespace
 }
 
 // GetCurNamespace will return the current namespace for the running program
@@ -81,7 +80,7 @@ func (k *K8s) GetCurNamespace() string {
 		namespace, _, _ = kubeconfig.Namespace()
 		return namespace
 	}
-	if data, err := ioutil.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
+	if data, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/namespace"); err == nil {
 		if namespace = strings.TrimSpace(string(data)); len(namespace) > 0 {
 			return namespace
 		}

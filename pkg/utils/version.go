@@ -6,7 +6,7 @@ import (
 
 var (
 	BuildTS   = "None"
-	GitHash   = ""
+	GitHash   string
 	GitBranch = "None"
 	Version   = "None"
 )
@@ -23,7 +23,7 @@ func getVersion() string {
 	return Version
 }
 
-//PrintFullVersion print full version
+// PrintFullVersion print full version
 func PrintFullVersion() {
 	fmt.Println("Version:          ", getVersion())
 	fmt.Println("Git Branch:       ", GitBranch)

@@ -7,14 +7,15 @@ import (
 	"k8res/pkg/config"
 	"k8res/pkg/logger"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	client "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
-//AllPodResStore ex: [ns][podName]
+// AllPodResStore ex: [ns][podName]
 type AllPodResStore map[string]map[string]PodResStore
 
-//PodResStore ex: [request/limit/usage][cpu/mem/disk][normal/min/mas] = int64
+// PodResStore ex: [request/limit/usage][cpu/mem/disk][normal/min/mas] = int64
 type PodResStore map[string]map[string]map[string]int64
 
 func GetPodRes(k8 *k8client.K8s, store AllPodResStore) error {
@@ -90,18 +91,21 @@ func GetPodRes(k8 *k8client.K8s, store AllPodResStore) error {
 			// usage
 			mc := k8.MetricsClient.MetricsV1beta1().PodMetricses(pod.Namespace)
 			podMetrics, err := mc.Get(ctx, pod.Name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-			for _, container := range podMetrics.Containers {
-				if container.Usage.Cpu() != nil {
-					podStore["usage"]["cpu"]["normal"] += container.Usage.Cpu().MilliValue()
+			if err == nil {
+				for _, container := range podMetrics.Containers {
+					if container.Usage.Cpu() != nil {
+						podStore["usage"]["cpu"]["normal"] += container.Usage.Cpu().MilliValue()
+					}
+					if container.Usage.Memory() != nil {
+						podStore["usage"]["mem"]["normal"] += container.Usage.Memory().Value()
+					}
+					if container.Usage.Storage() != nil {
+						podStore["usage"]["disk"]["normal"] += container.Usage.Storage().Value()
+					}
 				}
-				if container.Usage.Memory() != nil {
-					podStore["usage"]["mem"]["normal"] += container.Usage.Memory().Value()
-				}
-				if container.Usage.Storage() != nil {
-					podStore["usage"]["disk"]["normal"] += container.Usage.Storage().Value()
+			} else {
+				if err.(*errors.StatusError).ErrStatus.Code != 404 {
+					return err
 				}
 			}
 			updateMinMaxUsage(podStore)

@@ -17,7 +17,7 @@ var exportCmd = &cobra.Command{
 	Run: exportStart,
 }
 
-func exportStart(cmd *cobra.Command, args []string) {
+func exportStart(*cobra.Command, []string) {
 	k8 := k8client.New("")
 	store := make(process.AllPodResStore)
 	if err := process.GetPodRes(k8, store); err != nil {
